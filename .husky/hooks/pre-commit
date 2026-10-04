@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -e
+
+echo "→ Running gofmt on staged files..."
+STAGED_GO_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.go$' || true)
+
+if [ -n "$STAGED_GO_FILES" ]; then
+  gofmt -w $STAGED_GO_FILES
+  git add $STAGED_GO_FILES
+  echo "✓ gofmt applied"
+else
+  echo "✓ No Go files staged, skipping gofmt"
+fi
+
+echo "→ Running go vet..."
+go vet ./...
+
+echo "✓ All pre-commit checks passed"
