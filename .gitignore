@@ -1,0 +1,81 @@
+# === Build artifacts ===
+# Binary hasil build (Air, go build manual)
+/tmp/
+/main
+/server
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# === Test & coverage ===
+*.test
+*.out
+coverage.txt
+coverage.html
+profile.out
+
+# === Air ===
+# Air menaruh binary & log di sini
+tmp/
+build-errors.log
+
+# === Environment & secrets ===
+# WAJIB di-ignore — jangan pernah commit ini
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.p12
+
+# === Go workspace (opsional) ===
+go.work
+go.work.sum
+
+# === Vendor (opsional) ===
+# Uncomment kalau Anda tidak commit folder vendor/
+# vendor/
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# === OS ===
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# === Logs ===
+*.log
+logs/
+!build-errors.log  # kalau mau tetap di-ignore juga, hapus baris ini
+
+# === Database lokal ===
+# Kalau Anda pakai SQLite untuk dev
+*.db
+*.sqlite
+*.sqlite3
+
+# === Misc ===
+# File sementara
+*.bak
+*.tmp
+*.swp
+.cache/
