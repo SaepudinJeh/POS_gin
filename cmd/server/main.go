@@ -15,8 +15,12 @@ func main() {
 	r := gin.Default()
 
 	r.TrustedPlatform = gin.PlatformFlyIO
+	r.TrustedPlatform = gin.PlatformCloudflare
+	r.TrustedPlatform = gin.PlatformGoogleAppEngine
 
 	r.HandleMethodNotAllowed = true
+
+	r.Use(middlewares.RateLimiter())
 
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"https://example.com"},
@@ -29,7 +33,7 @@ func main() {
 
 	r.Use(middlewares.ErrorHandler())
 
-	r.GET("/pingg", func(ctx *gin.Context) {
+	r.GET("/ping", func(ctx *gin.Context) {
 		fmt.Printf("ClientIP: %s\n", ctx.ClientIP())
 		ctx.JSON(http.StatusOK, gin.H{
 			"message": "Pong",
