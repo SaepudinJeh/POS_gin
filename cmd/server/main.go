@@ -4,6 +4,9 @@ import (
 	"POS/internal/middlewares"
 	"fmt"
 	"net/http"
+	"time"
+
+	"github.com/gin-contrib/cors"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,6 +17,15 @@ func main() {
 	r.TrustedPlatform = gin.PlatformFlyIO
 
 	r.HandleMethodNotAllowed = true
+
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"https://example.com"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	r.Use(middlewares.ErrorHandler())
 
