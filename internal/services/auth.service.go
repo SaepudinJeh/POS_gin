@@ -34,6 +34,7 @@ func (s *AuthService) Register(name, email, password string) (*models.User, erro
 		Name:     name,
 		Email:    email,
 		Password: string(hashed),
+		Role:     "user",
 	}
 
 	if err := s.userRepo.Create(&user); err != nil {
