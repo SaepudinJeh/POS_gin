@@ -32,6 +32,18 @@ func ConnectDatabase() {
 		log.Fatal("Gagal migrasi:", err)
 	}
 
+	db.Exec(`
+		CREATE UNIQUE INDEX IF NOT EXISTS idx_categories_name_active
+		ON categories (name)
+		WHERE deleted_at IS NULL;
+	`)
+
+	db.Exec(`
+		CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_active
+		ON users (email)
+		WHERE deleted_at IS NULL;
+	`)
+
 	DB = db
 	log.Println("Database connected & migrated")
 }
