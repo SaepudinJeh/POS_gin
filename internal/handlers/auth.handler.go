@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"POS/internal/dto"
 	"POS/internal/services"
 
 	"github.com/gin-gonic/gin"
@@ -15,18 +16,14 @@ func NewAuthHandler(svc *services.AuthService) *AuthHandler {
 }
 
 func (h *AuthHandler) Register(ctx *gin.Context) {
-	var input struct {
-		Name     string `json:"name" binding:"required"`
-		Email    string `json:"email" binding:"required,email"`
-		Password string `json:"password" binding:"required,min=6"`
-	}
+	var req dto.RegisterRequest
 
-	if err := ctx.ShouldBindJSON(&input); err != nil {
+	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(400, gin.H{"success": false, "message": err.Error()})
 		return
 	}
 
-	user, err := h.svc.Register(input.Name, input.Email, input.Password)
+	user, err := h.svc.Register(req.Name, req.Email, req.Password)
 
 	if err != nil {
 		ctx.JSON(400, gin.H{"success": false, "message": err.Error()})
@@ -37,17 +34,14 @@ func (h *AuthHandler) Register(ctx *gin.Context) {
 }
 
 func (h *AuthHandler) Login(ctx *gin.Context) {
-	var input struct {
-		Email    string `json:"email" binding:"required,email"`
-		Password string `json:"password" binding:"required"`
-	}
+	var req dto.LoginRequest
 
-	if err := ctx.ShouldBindJSON(&input); err != nil {
+	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(400, gin.H{"success": false, "message": err.Error()})
 		return
 	}
 
-	token, err := h.svc.Login(input.Email, input.Password)
+	token, err := h.svc.Login(req.Email, req.Password)
 
 	if err != nil {
 		ctx.JSON(401, gin.H{"success": false, "message": err.Error()})
