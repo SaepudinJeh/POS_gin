@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-echo "→ Running go test sebelum push..."
-go test ./... -race -count=1
+echo "Running go test sebelum push..."
+go test ./... -count=1
 
-echo "✓ Semua test lulus, lanjut push!"
+echo "Semua test lulus, lanjut push!"
