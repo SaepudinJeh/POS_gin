@@ -24,12 +24,11 @@ func main() {
 
 	configs.ConnectDatabase()
 
+	r := gin.Default()
+
 	userRepo := repositories.NewUserRepository(configs.DB)
 	authService := services.NewAuthService(userRepo)
 	authHandler := handlers.NewAuthHandler(authService)
-
-	r := gin.Default()
-
 	authRoutes := r.Group("/api/v1/auth")
 	{
 		authRoutes.POST("/register", authHandler.Register)
@@ -43,6 +42,24 @@ func main() {
 			userID, _ := c.Get("user_id")
 			c.JSON(200, gin.H{"user_id": userID})
 		})
+	}
+
+	categoryRepo := repositories.NewCategoryRepository(configs.DB)
+	categoryService := services.NewCategoryService(categoryRepo)
+	categoryHandler := handlers.NewCategoryHandler(categoryService)
+
+	categories := protected.Group("/categories")
+	{
+		categories.GET("", categoryHandler.GetAll)
+		categories.GET("/:id", categoryHandler.GetByID)
+
+		admin := categories.Group("")
+		// admin.Use(middlewares.RequireRole("admin"))
+		{
+			admin.POST("", categoryHandler.Create)
+			admin.PUT("/:id", categoryHandler.Update)
+			admin.DELETE("/:id", categoryHandler.Delete)
+		}
 	}
 
 	r.TrustedPlatform = gin.PlatformFlyIO
