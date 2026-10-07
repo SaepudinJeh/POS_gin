@@ -4,8 +4,8 @@ import (
 	"POS/internal/configs"
 	"POS/internal/handlers"
 	"POS/internal/middlewares"
+	"POS/internal/repositories"
 	"POS/internal/services"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -24,7 +24,8 @@ func main() {
 
 	configs.ConnectDatabase()
 
-	authService := services.NewAuthService(configs.DB)
+	userRepo := repositories.NewUserRepository(configs.DB)
+	authService := services.NewAuthService(userRepo)
 	authHandler := handlers.NewAuthHandler(authService)
 
 	r := gin.Default()
@@ -62,13 +63,6 @@ func main() {
 	}))
 
 	r.Use(middlewares.ErrorHandler())
-
-	r.GET("/ping", func(ctx *gin.Context) {
-		fmt.Printf("ClientIP: %s\n", ctx.ClientIP())
-		ctx.JSON(http.StatusOK, gin.H{
-			"message": "Pong",
-		})
-	})
 
 	// handler global error
 	r.NoRoute(func(ctx *gin.Context) {

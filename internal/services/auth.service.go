@@ -2,27 +2,25 @@ package services
 
 import (
 	"POS/internal/models"
+	"POS/internal/repositories"
 	"errors"
 	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
 )
 
 type AuthService struct {
-	DB *gorm.DB
+	userRepo repositories.UserRepository
 }
 
-func NewAuthService(db *gorm.DB) *AuthService {
-	return &AuthService{DB: db}
+func NewAuthService(userRepo repositories.UserRepository) *AuthService {
+	return &AuthService{userRepo: userRepo}
 }
 
 func (s *AuthService) Register(name, email, password string) (*models.User, error) {
-	var existing models.User
-
-	if err := s.DB.Where("email = ?", email).First(&existing).Error; err == nil {
+	if _, err := s.userRepo.FindByEmail(email); err == nil {
 		return nil, errors.New("email sudah terdaftar")
 	}
 
@@ -38,7 +36,7 @@ func (s *AuthService) Register(name, email, password string) (*models.User, erro
 		Password: string(hashed),
 	}
 
-	if err := s.DB.Create(&user).Error; err != nil {
+	if err := s.userRepo.Create(&user); err != nil {
 		return nil, err
 	}
 
@@ -46,9 +44,10 @@ func (s *AuthService) Register(name, email, password string) (*models.User, erro
 }
 
 func (s *AuthService) Login(email, password string) (string, error) {
-	var user models.User
 
-	if err := s.DB.Where("email = ?", email).First(&user).Error; err != nil {
+	user, err := s.userRepo.FindByEmail(email)
+
+	if err != nil {
 		return "", errors.New("email tidak ditemukan")
 	}
 
