@@ -27,30 +27,31 @@ func ConnectDatabase() {
 		log.Fatal("Gagal koneksi database:", err)
 	}
 
-	// Auto migrate
-	if err := db.AutoMigrate(&models.User{}); err != nil {
+	// Auto migrate SEMUA model
+	if err := db.AutoMigrate(
+		&models.User{},
+		&models.Category{},
+		&models.Product{},
+	); err != nil {
 		log.Fatal("Gagal migrasi:", err)
 	}
 
 	// Partial unique index untuk soft delete
-	db.Exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_active
-		ON users (email) WHERE deleted_at IS NULL;`)
-	db.Exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_categories_name_active
-		ON categories (name) WHERE deleted_at IS NULL;`)
-	db.Exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_products_sku_active
-		ON products (sku) WHERE deleted_at IS NULL;`)
+	// (jalankan SETELAH AutoMigrate selesai bikin tabel)
+	indexes := []string{
+		`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_active
+			ON users (email) WHERE deleted_at IS NULL;`,
+		`CREATE UNIQUE INDEX IF NOT EXISTS idx_categories_name_active
+			ON categories (name) WHERE deleted_at IS NULL;`,
+		`CREATE UNIQUE INDEX IF NOT EXISTS idx_products_sku_active
+			ON products (sku) WHERE deleted_at IS NULL;`,
+	}
 
-	db.Exec(`
-		CREATE UNIQUE INDEX IF NOT EXISTS idx_categories_name_active
-		ON categories (name)
-		WHERE deleted_at IS NULL;
-	`)
-
-	db.Exec(`
-		CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_active
-		ON users (email)
-		WHERE deleted_at IS NULL;
-	`)
+	for _, idx := range indexes {
+		if err := db.Exec(idx).Error; err != nil {
+			log.Fatal("Gagal buat index:", err)
+		}
+	}
 
 	DB = db
 	log.Println("Database connected & migrated")
