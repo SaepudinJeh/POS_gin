@@ -1,10 +1,9 @@
 package routes
 
 import (
-	"net/http"
-
 	"POS/internal/handlers"
 	"POS/internal/middlewares"
+	"POS/internal/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,27 +15,25 @@ type Handlers struct {
 }
 
 func SetupRouter(h *Handlers) *gin.Engine {
-	r := gin.Default()
+	r := gin.New()
+	r.Use(gin.Logger())
+	r.Use(middlewares.Recovery())
 
 	api := r.Group("/api/v1")
 
-	// ---------- Public routes ----------
+	// Public routes
 	RegisterAuthRoutes(api, h.Auth)
 
-	// ---------- Protected routes ----------
+	// Protected routes
 	protected := api.Group("")
 	protected.Use(middlewares.AuthMiddleware())
 
-	// Profile (sementara inline, nanti bisa dipindah ke UserHandler)
 	protected.GET("/profile", func(c *gin.Context) {
 		userID, _ := c.Get("user_id")
 		role, _ := c.Get("role")
-		c.JSON(http.StatusOK, gin.H{
-			"success": true,
-			"data": gin.H{
-				"user_id": userID,
-				"role":    role,
-			},
+		response.Success(c, gin.H{
+			"user_id": userID,
+			"role":    role,
 		})
 	})
 

@@ -1,12 +1,12 @@
 package handlers
 
 import (
-	"net/http"
 	"strconv"
 
 	"POS/internal/dto"
 	"POS/internal/models"
 	"POS/internal/repositories"
+	"POS/internal/response"
 	"POS/internal/services"
 	"POS/internal/validators"
 
@@ -43,7 +43,7 @@ func (h *ProductHandler) GetAll(c *gin.Context) {
 
 	products, total, err := h.svc.GetAll(filter)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.InternalError(c, err.Error())
 		return
 	}
 
@@ -52,43 +52,28 @@ func (h *ProductHandler) GetAll(c *gin.Context) {
 		responses = append(responses, toProductResponse(p))
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"data":    responses,
-		"meta": gin.H{
-			"total": total,
-			"page":  filter.Page,
-			"limit": filter.Limit,
-		},
-	})
+	response.Paginated(c, responses, total, filter.Page, filter.Limit)
 }
 
 func (h *ProductHandler) GetByID(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "ID tidak valid"})
+		response.BadRequest(c, "ID tidak valid")
 		return
 	}
 
 	product, err := h.svc.GetByID(uint(id))
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		response.NotFound(c, err.Error())
 		return
 	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"data":    toProductResponse(product),
-	})
+	response.Success(c, toProductResponse(product))
 }
 
 func (h *ProductHandler) Create(c *gin.Context) {
 	var req dto.CreateProductRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"errors":  validators.FormatValidationError(err),
-		})
+		response.ValidationError(c, validators.FormatValidationError(err))
 		return
 	}
 
@@ -102,31 +87,24 @@ func (h *ProductHandler) Create(c *gin.Context) {
 		CategoryID:  req.CategoryID,
 	})
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response.BadRequest(c, err.Error())
 		return
 	}
 
 	full, _ := h.svc.GetByID(product.ID)
-
-	c.JSON(http.StatusCreated, gin.H{
-		"success": true,
-		"data":    toProductResponse(full),
-	})
+	response.CreatedWithMessage(c, "Produk berhasil dibuat", toProductResponse(full))
 }
 
 func (h *ProductHandler) Update(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "ID tidak valid"})
+		response.BadRequest(c, "ID tidak valid")
 		return
 	}
 
 	var req dto.UpdateProductRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"errors":  validators.FormatValidationError(err),
-		})
+		response.ValidationError(c, validators.FormatValidationError(err))
 		return
 	}
 
@@ -141,33 +119,27 @@ func (h *ProductHandler) Update(c *gin.Context) {
 		IsActive:    req.IsActive,
 	})
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response.BadRequest(c, err.Error())
 		return
 	}
 
 	full, _ := h.svc.GetByID(product.ID)
-
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"data":    toProductResponse(full),
-	})
+	response.SuccessWithMessage(c, "Produk berhasil diperbarui", toProductResponse(full))
 }
 
 func (h *ProductHandler) Delete(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "ID tidak valid"})
+		response.BadRequest(c, "ID tidak valid")
 		return
 	}
 
 	if err := h.svc.Delete(uint(id)); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		response.NotFound(c, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"success": true, "message": "Produk dihapus"})
+	response.SuccessWithMessage(c, "Produk berhasil dihapus", nil)
 }
-
-// ---------- helpers ----------
 
 func toProductResponse(p *models.Product) dto.ProductResponse {
 	if p == nil {

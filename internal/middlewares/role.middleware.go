@@ -1,7 +1,7 @@
 package middlewares
 
 import (
-	"net/http"
+	"POS/internal/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -10,20 +10,14 @@ func RequireRole(roles ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userRole, exists := c.Get("role")
 		if !exists {
-			c.JSON(http.StatusForbidden, gin.H{
-				"success": false,
-				"message": "Role tidak ditemukan di token",
-			})
+			response.Forbidden(c, "Role tidak ditemukan di token")
 			c.Abort()
 			return
 		}
 
 		roleStr, ok := userRole.(string)
 		if !ok {
-			c.JSON(http.StatusForbidden, gin.H{
-				"success": false,
-				"message": "Format role tidak valid",
-			})
+			response.Forbidden(c, "Format role tidak valid")
 			c.Abort()
 			return
 		}
@@ -35,10 +29,7 @@ func RequireRole(roles ...string) gin.HandlerFunc {
 			}
 		}
 
-		c.JSON(http.StatusForbidden, gin.H{
-			"success": false,
-			"message": "Akses ditolak",
-		})
+		response.Forbidden(c, "Akses ditolak")
 		c.Abort()
 	}
 }

@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"POS/internal/dto"
+	"POS/internal/response"
 	"POS/internal/services"
+	"POS/internal/validators"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,38 +17,34 @@ func NewAuthHandler(svc *services.AuthService) *AuthHandler {
 	return &AuthHandler{svc: svc}
 }
 
-func (h *AuthHandler) Register(ctx *gin.Context) {
+func (h *AuthHandler) Register(c *gin.Context) {
 	var req dto.RegisterRequest
-
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(400, gin.H{"success": false, "message": err.Error()})
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.ValidationError(c, validators.FormatValidationError(err))
 		return
 	}
 
 	user, err := h.svc.Register(req.Name, req.Email, req.Password)
-
 	if err != nil {
-		ctx.JSON(400, gin.H{"success": false, "message": err.Error()})
+		response.BadRequest(c, err.Error())
 		return
 	}
 
-	ctx.JSON(201, gin.H{"success": true, "data": user})
+	response.CreatedWithMessage(c, "Registrasi berhasil", user)
 }
 
-func (h *AuthHandler) Login(ctx *gin.Context) {
+func (h *AuthHandler) Login(c *gin.Context) {
 	var req dto.LoginRequest
-
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(400, gin.H{"success": false, "message": err.Error()})
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.ValidationError(c, validators.FormatValidationError(err))
 		return
 	}
 
 	token, err := h.svc.Login(req.Email, req.Password)
-
 	if err != nil {
-		ctx.JSON(401, gin.H{"success": false, "message": err.Error()})
+		response.Unauthorized(c, err.Error())
 		return
 	}
 
-	ctx.JSON(200, gin.H{"success": true, "message": "Login successful", "token": token})
+	response.SuccessWithMessage(c, "Login berhasil", gin.H{"token": token})
 }
