@@ -1,79 +1,39 @@
 package main
 
 import (
+	"log"
+
 	"POS/internal/configs"
 	"POS/internal/container"
-	"POS/internal/middlewares"
 	"POS/internal/routes"
-	"log"
-	"net/http"
-	"strings"
-	"time"
-
-	"github.com/gin-contrib/cors"
-	"github.com/go-playground/validator/v10"
-	"github.com/joho/godotenv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
+	"github.com/joho/godotenv"
 )
 
 func main() {
-
+	// 1. Load .env
 	if err := godotenv.Load(); err != nil {
 		log.Println("File .env tidak ditemukan, pakai environment system")
 	}
 
+	gin.ForceConsoleColor()
+
+	// 2. Koneksi database & migrasi
 	configs.ConnectDatabase()
 
-	r := gin.Default()
-
+	// 3. Rakit semua dependency (repo → service → handler)
 	c := container.NewContainer(configs.DB)
 
-	r = routes.SetupRouter(&routes.Handlers{
+	// 4. Setup router (middleware + route diurus di sini)
+	r := routes.SetupRouter(&routes.Handlers{
 		Auth:     c.Auth,
 		Category: c.Category,
+		Product:  c.Product,
 	})
 
-	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
-		v.RegisterValidation("notspace", func(fl validator.FieldLevel) bool {
-			return !strings.Contains(fl.Field().String(), " ")
-		})
+	// 5. Jalankan server
+	if err := r.Run(); err != nil {
+		log.Fatal("Gagal menjalankan server:", err)
 	}
-
-	r.TrustedPlatform = gin.PlatformFlyIO
-	r.TrustedPlatform = gin.PlatformCloudflare
-	r.TrustedPlatform = gin.PlatformGoogleAppEngine
-
-	r.HandleMethodNotAllowed = true
-
-	r.Use(middlewares.RateLimiter())
-
-	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"},
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
-	}))
-
-	r.Use(middlewares.ErrorHandler())
-
-	// handler global error
-	r.NoRoute(func(ctx *gin.Context) {
-		ctx.AbortWithStatusJSON(http.StatusNotFound, gin.H{
-			"success": false,
-			"message": "Route not found",
-		})
-	})
-
-	r.NoMethod(func(ctx *gin.Context) {
-		ctx.AbortWithStatusJSON(http.StatusMethodNotAllowed, gin.H{
-			"success": false,
-			"message": "Method not allowed",
-		})
-	})
-
-	r.Run()
 }

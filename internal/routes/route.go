@@ -16,29 +16,31 @@ type Handlers struct {
 
 func SetupRouter(h *Handlers) *gin.Engine {
 	r := gin.New()
-	r.Use(gin.Logger())
-	r.Use(middlewares.Recovery())
 
+	// 1. Pasang semua middleware global
+	middlewares.RegisterGlobal(r)
+
+	// 2. Config engine
+	r.HandleMethodNotAllowed = true
+	_ = r.SetTrustedProxies([]string{"127.0.0.1"})
+
+	// 3. Route
 	api := r.Group("/api/v1")
-
-	// Public routes
 	RegisterAuthRoutes(api, h.Auth)
 
-	// Protected routes
 	protected := api.Group("")
 	protected.Use(middlewares.AuthMiddleware())
 
-	protected.GET("/profile", func(c *gin.Context) {
-		userID, _ := c.Get("user_id")
-		role, _ := c.Get("role")
-		response.Success(c, gin.H{
-			"user_id": userID,
-			"role":    role,
-		})
-	})
-
 	RegisterCategoryRoutes(protected, h.Category)
 	RegisterProductRoutes(protected, h.Product)
+
+	// 4. Fallback
+	r.NoRoute(func(c *gin.Context) {
+		response.NotFound(c, "Route tidak ditemukan")
+	})
+	r.NoMethod(func(c *gin.Context) {
+		response.Error(c, 405, "Method tidak diizinkan")
+	})
 
 	return r
 }
