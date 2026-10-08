@@ -5,12 +5,21 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/thienel/tlog"
 )
 
-// RegisterGlobal memasang semua middleware global ke engine.
-// Dipanggil SEKALI di SetupRouter, sebelum route didaftarkan.
 func RegisterGlobal(r *gin.Engine) {
-	r.Use(gin.Logger())
+	// tlog middleware untuk request logging
+	r.Use(tlog.GinMiddleware(
+		tlog.WithSkipPaths("/health", "/metrics", "/favicon.ico"),
+		tlog.WithMaskPatterns(
+			`(?i)password`,
+			`(?i)token`,
+			`(?i)secret`,
+			`(?i)authorization`,
+		),
+	))
+
 	r.Use(Recovery())
 	r.Use(RateLimiter())
 	r.Use(CORS())

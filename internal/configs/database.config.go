@@ -1,11 +1,14 @@
 package configs
 
 import (
-	"POS/internal/models"
 	"fmt"
 	"log"
 	"os"
+	"time"
 
+	"POS/internal/models"
+
+	"github.com/thienel/tlog"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -22,12 +25,18 @@ func ConnectDatabase() {
 		os.Getenv("DB_PORT"),
 	)
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+		// Pakai logger tlog untuk SQL logging
+		Logger: tlog.NewGormLogger(
+			tlog.WithSlowThreshold(200*time.Millisecond),
+			tlog.WithIgnoreRecordNotFound(true),
+		),
+	})
 	if err != nil {
 		log.Fatal("Gagal koneksi database:", err)
 	}
 
-	// Auto migrate SEMUA model
+	// Auto migrate
 	if err := db.AutoMigrate(
 		&models.User{},
 		&models.Category{},
@@ -36,8 +45,7 @@ func ConnectDatabase() {
 		log.Fatal("Gagal migrasi:", err)
 	}
 
-	// Partial unique index untuk soft delete
-	// (jalankan SETELAH AutoMigrate selesai bikin tabel)
+	// Partial unique index
 	indexes := []string{
 		`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_active
 			ON users (email) WHERE deleted_at IS NULL;`,
@@ -46,7 +54,6 @@ func ConnectDatabase() {
 		`CREATE UNIQUE INDEX IF NOT EXISTS idx_products_sku_active
 			ON products (sku) WHERE deleted_at IS NULL;`,
 	}
-
 	for _, idx := range indexes {
 		if err := db.Exec(idx).Error; err != nil {
 			log.Fatal("Gagal buat index:", err)
