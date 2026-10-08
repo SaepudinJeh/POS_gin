@@ -12,6 +12,7 @@ import (
 type Handlers struct {
 	Auth     *handlers.AuthHandler
 	Category *handlers.CategoryHandler
+	Product  *handlers.ProductHandler
 }
 
 func SetupRouter(h *Handlers) *gin.Engine {
@@ -40,7 +41,7 @@ func SetupRouter(h *Handlers) *gin.Engine {
 	})
 
 	RegisterCategoryRoutes(protected, h.Category)
-	// nanti: RegisterProductRoutes(protected, h.Product)
+	RegisterProductRoutes(protected, h.Product)
 
 	return r
 }
