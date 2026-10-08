@@ -7,12 +7,15 @@ import (
 	"POS/internal/routes"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-contrib/cors"
+	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 )
 
 func main() {
@@ -31,6 +34,12 @@ func main() {
 		Auth:     c.Auth,
 		Category: c.Category,
 	})
+
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		v.RegisterValidation("notspace", func(fl validator.FieldLevel) bool {
+			return !strings.Contains(fl.Field().String(), " ")
+		})
+	}
 
 	r.TrustedPlatform = gin.PlatformFlyIO
 	r.TrustedPlatform = gin.PlatformCloudflare
