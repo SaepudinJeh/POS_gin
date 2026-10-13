@@ -41,6 +41,7 @@ func ConnectDatabase() {
 		&models.User{},
 		&models.Category{},
 		&models.Product{},
+		&models.StockMutation{}, // <-- tambah
 	); err != nil {
 		log.Fatal("Gagal migrasi:", err)
 	}
