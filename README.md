@@ -115,14 +115,6 @@ gotestsum --format pkgname -- -run TestCategoryService_Create ./internal/service
 go test -count=1 ./...
 ```
 
-### Watch mode
-
-Jalankan di terminal terpisah:
-
-```bash
-air -c .air.test.toml
-```
-
 ---
 
 ## Coverage
