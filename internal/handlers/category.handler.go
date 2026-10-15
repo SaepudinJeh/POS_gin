@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"POS/internal/dto"
+	"POS/internal/repositories"
 	"POS/internal/response"
 	"POS/internal/services"
 	"POS/internal/validators"
@@ -20,12 +21,19 @@ func NewCategoryHandler(svc *services.CategoryService) *CategoryHandler {
 }
 
 func (h *CategoryHandler) GetAll(c *gin.Context) {
-	categories, err := h.svc.GetAll(c.Request.Context())
+	filter := repositories.CategoryFilter{
+		Search: c.Query("search"),
+		Page:   parseIntDefault(c.Query("page"), 1),
+		Limit:  parseIntDefault(c.Query("limit"), 10),
+	}
+
+	categories, total, err := h.svc.GetAll(c.Request.Context(), filter)
 	if err != nil {
 		response.InternalError(c, err.Error())
 		return
 	}
-	response.Success(c, categories)
+
+	response.Paginated(c, categories, total, filter.Page, filter.Limit)
 }
 
 func (h *CategoryHandler) GetByID(c *gin.Context) {

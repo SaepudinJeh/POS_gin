@@ -65,9 +65,15 @@ func TestCategoryHandler_GetAll(t *testing.T) {
 
 	var resp map[string]interface{}
 	_ = json.Unmarshal(w.Body.Bytes(), &resp)
+
 	data, _ := resp["data"].([]interface{})
 	if len(data) != 2 {
 		t.Errorf("harusnya 2, dapat: %d", len(data))
+	}
+
+	meta, _ := resp["meta"].(map[string]interface{})
+	if meta["total"].(float64) != 2 {
+		t.Errorf("total harusnya 2, dapat: %v", meta["total"])
 	}
 }
 

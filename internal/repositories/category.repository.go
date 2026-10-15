@@ -8,8 +8,14 @@ import (
 	"gorm.io/gorm"
 )
 
+type CategoryFilter struct {
+	Search string
+	Page   int
+	Limit  int
+}
+
 type CategoryRepository interface {
-	FindAll(ctx context.Context) ([]*models.Category, error)
+	FindAll(ctx context.Context, filter CategoryFilter) ([]*models.Category, int64, error)
 	FindByID(ctx context.Context, id uint) (*models.Category, error)
 	FindByName(ctx context.Context, name string) (*models.Category, error)
 	Create(ctx context.Context, category *models.Category) error
@@ -25,12 +31,38 @@ func NewCategoryRepository(db *gorm.DB) CategoryRepository {
 	return &categoryRepository{db: db}
 }
 
-func (r *categoryRepository) FindAll(ctx context.Context) ([]*models.Category, error) {
+func (r *categoryRepository) FindAll(ctx context.Context, filter CategoryFilter) ([]*models.Category, int64, error) {
 	var categories []*models.Category
-	if err := r.db.WithContext(ctx).Order("id DESC").Find(&categories).Error; err != nil {
-		return nil, err
+	var total int64
+
+	query := r.db.WithContext(ctx).Model(&models.Category{})
+
+	if filter.Search != "" {
+		search := "%" + filter.Search + "%"
+		query = query.Where("name ILIKE ?", search)
 	}
-	return categories, nil
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	if filter.Page < 1 {
+		filter.Page = 1
+	}
+	if filter.Limit < 1 || filter.Limit > 100 {
+		filter.Limit = 10
+	}
+	offset := (filter.Page - 1) * filter.Limit
+
+	if err := query.
+		Order("id DESC").
+		Offset(offset).
+		Limit(filter.Limit).
+		Find(&categories).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return categories, total, nil
 }
 
 func (r *categoryRepository) FindByID(ctx context.Context, id uint) (*models.Category, error) {

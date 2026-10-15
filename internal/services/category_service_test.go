@@ -77,15 +77,17 @@ func TestCategoryService_GetAll(t *testing.T) {
 	_, _ = svc.Create(ctx, "Makanan", "Kategori makanan")
 	_, _ = svc.Create(ctx, "Minuman", "Kategori minuman")
 
-	list, err := svc.GetAll(ctx)
+	list, total, err := svc.GetAll(ctx, repositories.CategoryFilter{Page: 1, Limit: 10})
 	if err != nil {
 		t.Fatalf("harusnya sukses, dapat: %v", err)
+	}
+	if total != 2 {
+		t.Errorf("total harusnya 2, dapat: %d", total)
 	}
 	if len(list) != 2 {
 		t.Errorf("harusnya 2, dapat: %d", len(list))
 	}
 }
-
 func TestCategoryService_GetByID(t *testing.T) {
 	ctx := context.Background()
 	svc := setupCategoryService()

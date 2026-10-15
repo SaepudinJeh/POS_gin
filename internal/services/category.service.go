@@ -16,8 +16,8 @@ func NewCategoryService(repo repositories.CategoryRepository) *CategoryService {
 	return &CategoryService{repo: repo}
 }
 
-func (s *CategoryService) GetAll(ctx context.Context) ([]*models.Category, error) {
-	return s.repo.FindAll(ctx)
+func (s *CategoryService) GetAll(ctx context.Context, filter repositories.CategoryFilter) ([]*models.Category, int64, error) {
+	return s.repo.FindAll(ctx, filter)
 }
 
 func (s *CategoryService) GetByID(ctx context.Context, id uint) (*models.Category, error) {
