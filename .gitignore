@@ -15,6 +15,10 @@
 coverage.txt
 coverage.html
 profile.out
+coverage.out
+*.cover
+*.coverprofile
+coverage
 
 # === Air ===
 # Air menaruh binary & log di sini
