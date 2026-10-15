@@ -41,7 +41,7 @@ func (h *ProductHandler) GetAll(c *gin.Context) {
 		}
 	}
 
-	products, total, err := h.svc.GetAll(filter)
+	products, total, err := h.svc.GetAll(c.Request.Context(), filter)
 	if err != nil {
 		response.InternalError(c, err.Error())
 		return
@@ -62,7 +62,7 @@ func (h *ProductHandler) GetByID(c *gin.Context) {
 		return
 	}
 
-	product, err := h.svc.GetByID(uint(id))
+	product, err := h.svc.GetByID(c.Request.Context(), uint(id))
 	if err != nil {
 		response.NotFound(c, err.Error())
 		return
@@ -77,7 +77,7 @@ func (h *ProductHandler) Create(c *gin.Context) {
 		return
 	}
 
-	product, err := h.svc.Create(services.ProductInput{
+	product, err := h.svc.Create(c.Request.Context(), services.ProductInput{
 		SKU:         req.SKU,
 		Name:        req.Name,
 		Description: req.Description,
@@ -91,7 +91,7 @@ func (h *ProductHandler) Create(c *gin.Context) {
 		return
 	}
 
-	full, _ := h.svc.GetByID(product.ID)
+	full, _ := h.svc.GetByID(c.Request.Context(), product.ID)
 	response.CreatedWithMessage(c, "Produk berhasil dibuat", toProductResponse(full))
 }
 
@@ -108,7 +108,7 @@ func (h *ProductHandler) Update(c *gin.Context) {
 		return
 	}
 
-	product, err := h.svc.Update(uint(id), services.ProductInput{
+	product, err := h.svc.Update(c.Request.Context(), uint(id), services.ProductInput{
 		SKU:         req.SKU,
 		Name:        req.Name,
 		Description: req.Description,
@@ -123,7 +123,7 @@ func (h *ProductHandler) Update(c *gin.Context) {
 		return
 	}
 
-	full, _ := h.svc.GetByID(product.ID)
+	full, _ := h.svc.GetByID(c.Request.Context(), product.ID)
 	response.SuccessWithMessage(c, "Produk berhasil diperbarui", toProductResponse(full))
 }
 
@@ -134,7 +134,7 @@ func (h *ProductHandler) Delete(c *gin.Context) {
 		return
 	}
 
-	if err := h.svc.Delete(uint(id)); err != nil {
+	if err := h.svc.Delete(c.Request.Context(), uint(id)); err != nil {
 		response.NotFound(c, err.Error())
 		return
 	}

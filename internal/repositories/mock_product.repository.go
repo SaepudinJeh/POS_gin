@@ -1,7 +1,9 @@
 package repositories
 
 import (
+	"context"
 	"errors"
+	"sort"
 	"strings"
 	"time"
 
@@ -28,16 +30,16 @@ func isActiveProduct(p *models.Product) bool {
 	return !p.DeletedAt.Valid
 }
 
-func (m *MockProductRepository) preloadCategory(p *models.Product) {
+func (m *MockProductRepository) preloadCategory(ctx context.Context, p *models.Product) {
 	if m.CategoryRepo == nil {
 		return
 	}
-	if cat, err := m.CategoryRepo.FindByID(p.CategoryID); err == nil {
+	if cat, err := m.CategoryRepo.FindByID(ctx, p.CategoryID); err == nil {
 		p.Category = cat
 	}
 }
 
-func (m *MockProductRepository) FindAll(filter ProductFilter) ([]*models.Product, int64, error) {
+func (m *MockProductRepository) FindAll(ctx context.Context, filter ProductFilter) ([]*models.Product, int64, error) {
 	var result []*models.Product
 
 	for _, p := range m.Products {
@@ -57,9 +59,13 @@ func (m *MockProductRepository) FindAll(filter ProductFilter) ([]*models.Product
 				continue
 			}
 		}
-		m.preloadCategory(p)
+		m.preloadCategory(ctx, p)
 		result = append(result, p)
 	}
+
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].ID > result[j].ID
+	})
 
 	total := int64(len(result))
 
@@ -81,16 +87,16 @@ func (m *MockProductRepository) FindAll(filter ProductFilter) ([]*models.Product
 	return result[offset:end], total, nil
 }
 
-func (m *MockProductRepository) FindByID(id uint) (*models.Product, error) {
+func (m *MockProductRepository) FindByID(ctx context.Context, id uint) (*models.Product, error) {
 	p, ok := m.Products[id]
 	if !ok || !isActiveProduct(p) {
 		return nil, errors.New("product not found")
 	}
-	m.preloadCategory(p)
+	m.preloadCategory(ctx, p)
 	return p, nil
 }
 
-func (m *MockProductRepository) FindBySKU(sku string) (*models.Product, error) {
+func (m *MockProductRepository) FindBySKU(_ context.Context, sku string) (*models.Product, error) {
 	for _, p := range m.Products {
 		if isActiveProduct(p) && p.SKU == sku {
 			return p, nil
@@ -99,14 +105,14 @@ func (m *MockProductRepository) FindBySKU(sku string) (*models.Product, error) {
 	return nil, errors.New("product not found")
 }
 
-func (m *MockProductRepository) Create(product *models.Product) error {
+func (m *MockProductRepository) Create(_ context.Context, product *models.Product) error {
 	product.ID = m.NextID
 	m.NextID++
 	m.Products[product.ID] = product
 	return nil
 }
 
-func (m *MockProductRepository) Update(product *models.Product) error {
+func (m *MockProductRepository) Update(_ context.Context, product *models.Product) error {
 	p, ok := m.Products[product.ID]
 	if !ok || !isActiveProduct(p) {
 		return errors.New("product not found")
@@ -115,7 +121,7 @@ func (m *MockProductRepository) Update(product *models.Product) error {
 	return nil
 }
 
-func (m *MockProductRepository) Delete(id uint) error {
+func (m *MockProductRepository) Delete(_ context.Context, id uint) error {
 	p, ok := m.Products[id]
 	if !ok || !isActiveProduct(p) {
 		return errors.New("product not found")
@@ -124,7 +130,7 @@ func (m *MockProductRepository) Delete(id uint) error {
 	return nil
 }
 
-func (m *MockProductRepository) CountByCategoryID(categoryID uint) (int64, error) {
+func (m *MockProductRepository) CountByCategoryID(_ context.Context, categoryID uint) (int64, error) {
 	var count int64
 	for _, p := range m.Products {
 		if isActiveProduct(p) && p.CategoryID == categoryID {

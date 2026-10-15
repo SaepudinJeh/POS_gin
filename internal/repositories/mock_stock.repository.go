@@ -4,11 +4,8 @@ import (
 	"context"
 	"errors"
 	"sort"
-	"time"
 
 	"POS/internal/models"
-
-	"gorm.io/gorm"
 )
 
 type MockStockRepository struct {
@@ -29,11 +26,11 @@ func isActiveMutation(m *models.StockMutation) bool {
 	return !m.DeletedAt.Valid
 }
 
-func (m *MockStockRepository) preloadProduct(mut *models.StockMutation) {
+func (m *MockStockRepository) preloadProduct(ctx context.Context, mut *models.StockMutation) {
 	if m.ProductRepo == nil {
 		return
 	}
-	if p, err := m.ProductRepo.FindByID(mut.ProductID); err == nil {
+	if p, err := m.ProductRepo.FindByID(ctx, mut.ProductID); err == nil {
 		mut.Product = p
 	}
 }
@@ -45,7 +42,7 @@ func (m *MockStockRepository) Create(_ context.Context, mutation *models.StockMu
 	return nil
 }
 
-func (m *MockStockRepository) FindAll(_ context.Context, filter StockFilter) ([]*models.StockMutation, int64, error) {
+func (m *MockStockRepository) FindAll(ctx context.Context, filter StockFilter) ([]*models.StockMutation, int64, error) {
 	var result []*models.StockMutation
 
 	for _, mut := range m.Mutations {
@@ -58,11 +55,10 @@ func (m *MockStockRepository) FindAll(_ context.Context, filter StockFilter) ([]
 		if filter.Type != "" && mut.Type != filter.Type {
 			continue
 		}
-		m.preloadProduct(mut)
+		m.preloadProduct(ctx, mut)
 		result = append(result, mut)
 	}
 
-	// Sort by ID DESC
 	sort.Slice(result, func(i, j int) bool {
 		return result[i].ID > result[j].ID
 	})
@@ -87,20 +83,20 @@ func (m *MockStockRepository) FindAll(_ context.Context, filter StockFilter) ([]
 	return result[offset:end], total, nil
 }
 
-func (m *MockStockRepository) FindByID(_ context.Context, id uint) (*models.StockMutation, error) {
+func (m *MockStockRepository) FindByID(ctx context.Context, id uint) (*models.StockMutation, error) {
 	mut, ok := m.Mutations[id]
 	if !ok || !isActiveMutation(mut) {
 		return nil, errors.New("stock mutation not found")
 	}
-	m.preloadProduct(mut)
+	m.preloadProduct(ctx, mut)
 	return mut, nil
 }
 
-func (m *MockStockRepository) FindByProductID(_ context.Context, productID uint) ([]*models.StockMutation, error) {
+func (m *MockStockRepository) FindByProductID(ctx context.Context, productID uint) ([]*models.StockMutation, error) {
 	var result []*models.StockMutation
 	for _, mut := range m.Mutations {
 		if isActiveMutation(mut) && mut.ProductID == productID {
-			m.preloadProduct(mut)
+			m.preloadProduct(ctx, mut)
 			result = append(result, mut)
 		}
 	}
@@ -109,7 +105,3 @@ func (m *MockStockRepository) FindByProductID(_ context.Context, productID uint)
 	})
 	return result, nil
 }
-
-// pastikan tidak ada import gorm yang tidak terpakai
-var _ = gorm.DeletedAt{}
-var _ = time.Now

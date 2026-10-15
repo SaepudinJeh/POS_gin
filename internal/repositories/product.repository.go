@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"context"
+
 	"POS/internal/models"
 
 	"gorm.io/gorm"
@@ -15,13 +17,13 @@ type ProductFilter struct {
 }
 
 type ProductRepository interface {
-	FindAll(filter ProductFilter) ([]*models.Product, int64, error)
-	FindByID(id uint) (*models.Product, error)
-	FindBySKU(sku string) (*models.Product, error)
-	Create(product *models.Product) error
-	Update(product *models.Product) error
-	Delete(id uint) error
-	CountByCategoryID(categoryID uint) (int64, error)
+	FindAll(ctx context.Context, filter ProductFilter) ([]*models.Product, int64, error)
+	FindByID(ctx context.Context, id uint) (*models.Product, error)
+	FindBySKU(ctx context.Context, sku string) (*models.Product, error)
+	Create(ctx context.Context, product *models.Product) error
+	Update(ctx context.Context, product *models.Product) error
+	Delete(ctx context.Context, id uint) error
+	CountByCategoryID(ctx context.Context, categoryID uint) (int64, error)
 }
 
 type productRepository struct {
@@ -32,11 +34,11 @@ func NewProductRepository(db *gorm.DB) ProductRepository {
 	return &productRepository{db: db}
 }
 
-func (r *productRepository) FindAll(filter ProductFilter) ([]*models.Product, int64, error) {
+func (r *productRepository) FindAll(ctx context.Context, filter ProductFilter) ([]*models.Product, int64, error) {
 	var products []*models.Product
 	var total int64
 
-	query := r.db.Model(&models.Product{})
+	query := r.db.WithContext(ctx).Model(&models.Product{})
 
 	if filter.CategoryID != nil {
 		query = query.Where("category_id = ?", *filter.CategoryID)
@@ -73,37 +75,37 @@ func (r *productRepository) FindAll(filter ProductFilter) ([]*models.Product, in
 	return products, total, nil
 }
 
-func (r *productRepository) FindByID(id uint) (*models.Product, error) {
+func (r *productRepository) FindByID(ctx context.Context, id uint) (*models.Product, error) {
 	var product models.Product
-	if err := r.db.Preload("Category").First(&product, id).Error; err != nil {
+	if err := r.db.WithContext(ctx).Preload("Category").First(&product, id).Error; err != nil {
 		return nil, err
 	}
 	return &product, nil
 }
 
-func (r *productRepository) FindBySKU(sku string) (*models.Product, error) {
+func (r *productRepository) FindBySKU(ctx context.Context, sku string) (*models.Product, error) {
 	var product models.Product
-	if err := r.db.Where("sku = ?", sku).First(&product).Error; err != nil {
+	if err := r.db.WithContext(ctx).Where("sku = ?", sku).First(&product).Error; err != nil {
 		return nil, err
 	}
 	return &product, nil
 }
 
-func (r *productRepository) Create(product *models.Product) error {
-	return r.db.Create(product).Error
+func (r *productRepository) Create(ctx context.Context, product *models.Product) error {
+	return r.db.WithContext(ctx).Create(product).Error
 }
 
-func (r *productRepository) Update(product *models.Product) error {
-	return r.db.Save(product).Error
+func (r *productRepository) Update(ctx context.Context, product *models.Product) error {
+	return r.db.WithContext(ctx).Save(product).Error
 }
 
-func (r *productRepository) Delete(id uint) error {
-	return r.db.Delete(&models.Product{}, id).Error
+func (r *productRepository) Delete(ctx context.Context, id uint) error {
+	return r.db.WithContext(ctx).Delete(&models.Product{}, id).Error
 }
 
-func (r *productRepository) CountByCategoryID(categoryID uint) (int64, error) {
+func (r *productRepository) CountByCategoryID(ctx context.Context, categoryID uint) (int64, error) {
 	var count int64
-	if err := r.db.Model(&models.Product{}).
+	if err := r.db.WithContext(ctx).Model(&models.Product{}).
 		Where("category_id = ?", categoryID).
 		Count(&count).Error; err != nil {
 		return 0, err

@@ -20,7 +20,7 @@ func NewCategoryHandler(svc *services.CategoryService) *CategoryHandler {
 }
 
 func (h *CategoryHandler) GetAll(c *gin.Context) {
-	categories, err := h.svc.GetAll()
+	categories, err := h.svc.GetAll(c.Request.Context())
 	if err != nil {
 		response.InternalError(c, err.Error())
 		return
@@ -35,7 +35,7 @@ func (h *CategoryHandler) GetByID(c *gin.Context) {
 		return
 	}
 
-	category, err := h.svc.GetByID(uint(id))
+	category, err := h.svc.GetByID(c.Request.Context(), uint(id))
 	if err != nil {
 		response.NotFound(c, err.Error())
 		return
@@ -50,7 +50,7 @@ func (h *CategoryHandler) Create(c *gin.Context) {
 		return
 	}
 
-	category, err := h.svc.Create(req.Name, req.Description)
+	category, err := h.svc.Create(c.Request.Context(), req.Name, req.Description)
 	if err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -71,7 +71,7 @@ func (h *CategoryHandler) Update(c *gin.Context) {
 		return
 	}
 
-	category, err := h.svc.Update(uint(id), req.Name, req.Description)
+	category, err := h.svc.Update(c.Request.Context(), uint(id), req.Name, req.Description)
 	if err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -86,7 +86,7 @@ func (h *CategoryHandler) Delete(c *gin.Context) {
 		return
 	}
 
-	if err := h.svc.Delete(uint(id)); err != nil {
+	if err := h.svc.Delete(c.Request.Context(), uint(id)); err != nil {
 		response.NotFound(c, err.Error())
 		return
 	}
