@@ -33,6 +33,7 @@ func main() {
 		Auth:     c.Auth,
 		Category: c.Category,
 		Product:  c.Product,
+		Stock:    c.Stock,
 	})
 
 	// 6. Jalankan
