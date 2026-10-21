@@ -42,6 +42,8 @@ func ConnectDatabase() {
 		&models.Category{},
 		&models.Product{},
 		&models.StockMutation{},
+		&models.Transaction{},
+		&models.TransactionItem{},
 	); err != nil {
 		log.Fatal("Gagal migrasi:", err)
 	}
@@ -54,6 +56,8 @@ func ConnectDatabase() {
 			ON categories (name) WHERE deleted_at IS NULL;`,
 		`CREATE UNIQUE INDEX IF NOT EXISTS idx_products_sku_active
 			ON products (sku) WHERE deleted_at IS NULL;`,
+		`CREATE UNIQUE INDEX IF NOT EXISTS idx_transactions_invoice_active
+			ON transactions (invoice_number) WHERE deleted_at IS NULL;`,
 	}
 	for _, idx := range indexes {
 		if err := db.Exec(idx).Error; err != nil {
