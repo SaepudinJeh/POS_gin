@@ -9,10 +9,12 @@ import (
 )
 
 type Handlers struct {
-	Auth     *handlers.AuthHandler
-	Category *handlers.CategoryHandler
-	Product  *handlers.ProductHandler
-	Stock    *handlers.StockHandler
+	Auth        *handlers.AuthHandler
+	Category    *handlers.CategoryHandler
+	Product     *handlers.ProductHandler
+	Stock       *handlers.StockHandler
+	Transaction *handlers.TransactionHandler
+	Setting     *handlers.SettingHandler
 }
 
 func SetupRouter(h *Handlers) *gin.Engine {
@@ -35,6 +37,8 @@ func SetupRouter(h *Handlers) *gin.Engine {
 	RegisterCategoryRoutes(protected, h.Category)
 	RegisterProductRoutes(protected, h.Product)
 	RegisterStockRoutes(protected, h.Stock)
+	RegisterTransactionRoutes(protected, h.Transaction)
+	RegisterSettingRoutes(protected, h.Setting)
 
 	// 4. Fallback
 	r.NoRoute(func(c *gin.Context) {

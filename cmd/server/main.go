@@ -30,10 +30,11 @@ func main() {
 
 	// 5. Setup router
 	r := routes.SetupRouter(&routes.Handlers{
-		Auth:     c.Auth,
-		Category: c.Category,
-		Product:  c.Product,
-		Stock:    c.Stock,
+		Auth:        c.Auth,
+		Category:    c.Category,
+		Product:     c.Product,
+		Stock:       c.Stock,
+		Transaction: c.Transaction,
 	})
 
 	// 6. Jalankan

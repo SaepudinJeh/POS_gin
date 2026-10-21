@@ -44,6 +44,7 @@ func ConnectDatabase() {
 		&models.StockMutation{},
 		&models.Transaction{},
 		&models.TransactionItem{},
+		&models.Setting{},
 	); err != nil {
 		log.Fatal("Gagal migrasi:", err)
 	}
@@ -62,6 +63,23 @@ func ConnectDatabase() {
 	for _, idx := range indexes {
 		if err := db.Exec(idx).Error; err != nil {
 			log.Fatal("Gagal buat index:", err)
+		}
+	}
+
+	// Seed default settings
+	defaults := []models.Setting{
+		{Key: "tax_rate", Value: "11", Description: "PPN dalam persen (%)"},
+		{Key: "store_name", Value: "My POS", Description: "Nama toko"},
+		{Key: "store_address", Value: "", Description: "Alamat toko"},
+		{Key: "store_phone", Value: "", Description: "Nomor telepon toko"},
+		{Key: "invoice_prefix", Value: "INV", Description: "Prefix nomor invoice"},
+	}
+	for _, s := range defaults {
+		var existing models.Setting
+		if err := db.Where("key = ?", s.Key).First(&existing).Error; err == gorm.ErrRecordNotFound {
+			if err := db.Create(&s).Error; err != nil {
+				log.Fatal("Gagal seed setting:", err)
+			}
 		}
 	}
 

@@ -9,10 +9,12 @@ import (
 )
 
 type Container struct {
-	Auth     *handlers.AuthHandler
-	Category *handlers.CategoryHandler
-	Product  *handlers.ProductHandler
-	Stock    *handlers.StockHandler
+	Auth        *handlers.AuthHandler
+	Category    *handlers.CategoryHandler
+	Product     *handlers.ProductHandler
+	Stock       *handlers.StockHandler
+	Transaction *handlers.TransactionHandler
+	Setting     *handlers.SettingHandler
 }
 
 func NewContainer(db *gorm.DB) *Container {
@@ -36,10 +38,22 @@ func NewContainer(db *gorm.DB) *Container {
 	stockService := services.NewStockService(stockRepo, productRepo)
 	stockHandler := handlers.NewStockHandler(stockService)
 
+	// ---------- Setting ----------
+	settingRepo := repositories.NewSettingRepository(db)
+	settingService := services.NewSettingService(settingRepo)
+	settingHandler := handlers.NewSettingHandler(settingService)
+
+	// ---------- Transaction ----------
+	txnRepo := repositories.NewTransactionRepository(db)
+	txnService := services.NewTransactionService(txnRepo, productRepo, settingService)
+	txnHandler := handlers.NewTransactionHandler(txnService)
+
 	return &Container{
-		Auth:     authHandler,
-		Category: categoryHandler,
-		Product:  productHandler,
-		Stock:    stockHandler,
+		Auth:        authHandler,
+		Category:    categoryHandler,
+		Product:     productHandler,
+		Stock:       stockHandler,
+		Transaction: txnHandler,
+		Setting:     settingHandler,
 	}
 }
