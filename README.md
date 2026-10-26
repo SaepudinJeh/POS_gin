@@ -81,6 +81,20 @@ export GIN_MODE=release
 ./bin/pos-api
 ```
 
+## API Documentation (Swagger)
+
+Dokumentasi API di-generate otomatis dari anotasi di handler menggunakan
+[`swaggo/swag`](https://github.com/swaggo/swag) dan disajikan lewat
+[`gin-swagger`](https://github.com/swaggo/gin-swagger).
+
+### Akses
+
+Setelah server berjalan:
+
+```
+{HOST}/swagger/index.html
+```
+
 ---
 
 ## Testing

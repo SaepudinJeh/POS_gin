@@ -3,26 +3,26 @@ package dto
 import "time"
 
 type CreateTransactionItemRequest struct {
-	ProductID uint `json:"product_id" binding:"required"`
-	Quantity  int  `json:"quantity" binding:"required,gt=0"`
+	ProductID uint `json:"product_id" binding:"required" example:"1"`
+	Quantity  int  `json:"quantity" binding:"required,gt=0" example:"2"`
 }
 
 type CreateTransactionRequest struct {
 	Items         []CreateTransactionItemRequest `json:"items" binding:"required,min=1,dive"`
-	DiscountType  string                         `json:"discount_type" binding:"omitempty,oneof=percentage fixed"`
-	DiscountValue float64                        `json:"discount_value" binding:"gte=0"`
-	PaymentMethod string                         `json:"payment_method" binding:"omitempty,oneof=cash qris card transfer"`
-	PaymentAmount float64                        `json:"payment_amount" binding:"gte=0"`
-	Note          string                         `json:"note" binding:"max=500"`
+	DiscountType  string                         `json:"discount_type" binding:"omitempty,oneof=percentage fixed" example:"percentage"`
+	DiscountValue float64                        `json:"discount_value" binding:"gte=0" example:"10"`
+	PaymentMethod string                         `json:"payment_method" binding:"omitempty,oneof=cash qris card transfer" example:"cash"`
+	PaymentAmount float64                        `json:"payment_amount" binding:"gte=0" example:"20000"`
+	Note          string                         `json:"note" binding:"max=500" example:"Pelanggan reguler"`
 }
 
 type PayTransactionRequest struct {
-	PaymentMethod string  `json:"payment_method" binding:"required,oneof=cash qris card transfer"`
-	PaymentAmount float64 `json:"payment_amount" binding:"required,gt=0"`
+	PaymentMethod string  `json:"payment_method" binding:"required,oneof=cash qris card transfer" example:"cash"`
+	PaymentAmount float64 `json:"payment_amount" binding:"required,gt=0" example:"20000"`
 }
 
 type VoidTransactionRequest struct {
-	Reason string `json:"reason" binding:"required,max=255"`
+	Reason string `json:"reason" binding:"required,max=255" example:"Customer batal"`
 }
 
 type TransactionItemResponse struct {

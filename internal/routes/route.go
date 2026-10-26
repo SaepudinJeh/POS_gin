@@ -6,6 +6,11 @@ import (
 	"POS/internal/response"
 
 	"github.com/gin-gonic/gin"
+
+	_ "POS/docs" // <-- akan dibuat di STEP 7
+
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 type Handlers struct {
@@ -22,6 +27,9 @@ func SetupRouter(h *Handlers) *gin.Engine {
 
 	// 1. Pasang semua middleware global
 	middlewares.RegisterGlobal(r)
+
+	// Swagger UI
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// 2. Config engine
 	r.HandleMethodNotAllowed = true

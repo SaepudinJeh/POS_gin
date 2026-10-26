@@ -12,6 +12,15 @@ import (
 	"github.com/thienel/tlog"
 )
 
+// @title POS Backend API
+// @version 1.0
+// @description REST API untuk aplikasi Point of Sale (POS).
+// @host localhost:8080
+// @BasePath /api/v1
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Masukkan token dengan format: Bearer <token>
 func main() {
 	// 1. Load .env
 	if err := godotenv.Load(); err != nil {

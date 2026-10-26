@@ -3,10 +3,10 @@ package dto
 import "time"
 
 type CreateStockMutationRequest struct {
-	ProductID uint   `json:"product_id" binding:"required"`
-	Type      string `json:"type" binding:"required,oneof=in out adjustment"`
-	Quantity  int    `json:"quantity" binding:"required,gte=0"`
-	Note      string `json:"note" binding:"max=255"`
+	ProductID uint   `json:"product_id" binding:"required" example:"1"`
+	Type      string `json:"type" binding:"required,oneof=in out adjustment" example:"in"`
+	Quantity  int    `json:"quantity" binding:"required,gte=0" example:"50"`
+	Note      string `json:"note" binding:"max=255" example:"Restock dari supplier"`
 }
 
 type StockMutationResponse struct {

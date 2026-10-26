@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -e
 
+# ============================================================
+# 1. gofmt — format kode Go yang di-stage
+# ============================================================
 echo "→ Running gofmt on staged files..."
 STAGED_GO_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.go$' || true)
 
@@ -12,7 +15,52 @@ else
   echo "✓ No Go files staged, skipping gofmt"
 fi
 
+# ============================================================
+# 2. go vet — static analysis
+# ============================================================
+echo ""
 echo "→ Running go vet..."
 go vet ./...
+echo "✓ go vet passed"
 
+# ============================================================
+# 3. Swagger docs — generate & auto-stage kalau berubah
+# ============================================================
+echo ""
+echo "→ Checking Swagger docs..."
+
+if ! command -v swag >/dev/null 2>&1; then
+    echo ""
+    echo "✗ 'swag' tidak ditemukan di PATH."
+    echo ""
+    echo "  Install:"
+    echo "    go install github.com/swaggo/swag/cmd/swag@latest"
+    echo "  Lalu tambahkan %USERPROFILE%\\go\\bin ke PATH."
+    echo ""
+    echo "  Skip untuk sementara:"
+    echo "    git commit --no-verify ..."
+    echo ""
+    exit 1
+fi
+
+if ! swag init -g cmd/server/main.go --parseDependency --parseInternal -o ./docs --quiet; then
+    echo ""
+    echo "✗ Gagal generate Swagger docs."
+    echo "  Cek anotasi di handler / DTO."
+    echo ""
+    exit 1
+fi
+
+DOCS_CHANGES=$(git status --porcelain docs/)
+if [ -n "$DOCS_CHANGES" ]; then
+    echo "✓ Swagger docs updated:"
+    echo "$DOCS_CHANGES" | sed 's/^/    /'
+    git add docs/
+    echo "✓ docs/ auto-staged"
+else
+    echo "✓ Swagger docs already in sync"
+fi
+
+# ============================================================
+echo ""
 echo "✓ All pre-commit checks passed"

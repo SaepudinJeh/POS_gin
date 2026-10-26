@@ -78,6 +78,16 @@ func (h *TransactionHandler) GetByID(c *gin.Context) {
 	response.Success(c, toTransactionResponse(txn))
 }
 
+// CreateTransaction godoc
+// @Summary      Buat transaksi baru
+// @Tags         transactions
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body dto.CreateTransactionRequest true "Data transaksi"
+// @Success      201 {object} response.Response
+// @Failure      400 {object} response.ErrorResponse
+// @Router       /transactions [post]
 func (h *TransactionHandler) Create(c *gin.Context) {
 	var req dto.CreateTransactionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -133,6 +143,18 @@ func (h *TransactionHandler) Pay(c *gin.Context) {
 	response.SuccessWithMessage(c, "Pembayaran berhasil", toTransactionResponse(txn))
 }
 
+// VoidTransaction godoc
+// @Summary      Void transaksi (admin only)
+// @Tags         transactions
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "ID Transaksi"
+// @Param        request body dto.VoidTransactionRequest true "Alasan void"
+// @Success      200 {object} response.Response
+// @Failure      400 {object} response.ErrorResponse
+// @Failure      403 {object} response.ErrorResponse
+// @Router       /transactions/{id}/void [post]
 func (h *TransactionHandler) Void(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {

@@ -20,6 +20,17 @@ func NewCategoryHandler(svc *services.CategoryService) *CategoryHandler {
 	return &CategoryHandler{svc: svc}
 }
 
+// GetAllCategories godoc
+// @Summary      List kategori
+// @Tags         categories
+// @Produce      json
+// @Security     BearerAuth
+// @Param        page query int false "Halaman (default 1)"
+// @Param        limit query int false "Jumlah per halaman (default 10)"
+// @Param        search query string false "Cari berdasarkan nama"
+// @Success      200 {object} response.PaginationResponse
+// @Failure      401 {object} response.ErrorResponse
+// @Router       /categories [get]
 func (h *CategoryHandler) GetAll(c *gin.Context) {
 	filter := repositories.CategoryFilter{
 		Search: c.Query("search"),
@@ -36,6 +47,15 @@ func (h *CategoryHandler) GetAll(c *gin.Context) {
 	response.Paginated(c, categories, total, filter.Page, filter.Limit)
 }
 
+// GetCategory godoc
+// @Summary      Detail kategori
+// @Tags         categories
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "ID kategori"
+// @Success      200 {object} response.Response
+// @Failure      404 {object} response.ErrorResponse
+// @Router       /categories/{id} [get]
 func (h *CategoryHandler) GetByID(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -51,6 +71,17 @@ func (h *CategoryHandler) GetByID(c *gin.Context) {
 	response.Success(c, category)
 }
 
+// CreateCategory godoc
+// @Summary      Buat kategori
+// @Tags         categories
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body dto.CreateCategoryRequest true "Data kategori"
+// @Success      201 {object} response.Response
+// @Failure      400 {object} response.ErrorResponse
+// @Failure      403 {object} response.ErrorResponse
+// @Router       /categories [post]
 func (h *CategoryHandler) Create(c *gin.Context) {
 	var req dto.CreateCategoryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -66,6 +97,17 @@ func (h *CategoryHandler) Create(c *gin.Context) {
 	response.CreatedWithMessage(c, "Kategori berhasil dibuat", category)
 }
 
+// UpdateCategory godoc
+// @Summary      Update kategori
+// @Tags         categories
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "ID kategori"
+// @Param        request body dto.UpdateCategoryRequest true "Data kategori"
+// @Success      200 {object} response.Response
+// @Failure      400 {object} response.ErrorResponse
+// @Router       /categories/{id} [put]
 func (h *CategoryHandler) Update(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -87,6 +129,15 @@ func (h *CategoryHandler) Update(c *gin.Context) {
 	response.SuccessWithMessage(c, "Kategori berhasil diperbarui", category)
 }
 
+// DeleteCategory godoc
+// @Summary      Hapus kategori (soft delete)
+// @Tags         categories
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "ID kategori"
+// @Success      200 {object} response.Response
+// @Failure      404 {object} response.ErrorResponse
+// @Router       /categories/{id} [delete]
 func (h *CategoryHandler) Delete(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
