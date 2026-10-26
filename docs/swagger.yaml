@@ -1,0 +1,422 @@
+basePath: /api/v1
+definitions:
+  POS_internal_dto.CreateCategoryRequest:
+    properties:
+      description:
+        example: Kategori makanan
+        maxLength: 255
+        type: string
+      name:
+        example: Makanan
+        maxLength: 100
+        minLength: 2
+        type: string
+    required:
+    - name
+    type: object
+  POS_internal_dto.CreateTransactionItemRequest:
+    properties:
+      product_id:
+        example: 1
+        type: integer
+      quantity:
+        example: 2
+        type: integer
+    required:
+    - product_id
+    - quantity
+    type: object
+  POS_internal_dto.CreateTransactionRequest:
+    properties:
+      discount_type:
+        enum:
+        - percentage
+        - fixed
+        example: percentage
+        type: string
+      discount_value:
+        example: 10
+        minimum: 0
+        type: number
+      items:
+        items:
+          $ref: '#/definitions/POS_internal_dto.CreateTransactionItemRequest'
+        minItems: 1
+        type: array
+      note:
+        example: Pelanggan reguler
+        maxLength: 500
+        type: string
+      payment_amount:
+        example: 20000
+        minimum: 0
+        type: number
+      payment_method:
+        enum:
+        - cash
+        - qris
+        - card
+        - transfer
+        example: cash
+        type: string
+    required:
+    - items
+    type: object
+  POS_internal_dto.LoginRequest:
+    properties:
+      email:
+        example: budi@example.com
+        type: string
+      password:
+        example: rahasia123
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  POS_internal_dto.RegisterRequest:
+    properties:
+      email:
+        example: budi@example.com
+        type: string
+      name:
+        example: Budi Santoso
+        minLength: 3
+        type: string
+      password:
+        example: rahasia123
+        minLength: 6
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  POS_internal_dto.UpdateCategoryRequest:
+    properties:
+      description:
+        example: Kategori minuman
+        maxLength: 255
+        type: string
+      name:
+        example: Minuman
+        maxLength: 100
+        minLength: 2
+        type: string
+    required:
+    - name
+    type: object
+  POS_internal_dto.VoidTransactionRequest:
+    properties:
+      reason:
+        example: Customer batal
+        maxLength: 255
+        type: string
+    required:
+    - reason
+    type: object
+  POS_internal_response.ErrorResponse:
+    properties:
+      errors: {}
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  POS_internal_response.PaginationMeta:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  POS_internal_response.PaginationResponse:
+    properties:
+      data: {}
+      message:
+        type: string
+      meta:
+        $ref: '#/definitions/POS_internal_response.PaginationMeta'
+      success:
+        type: boolean
+    type: object
+  POS_internal_response.Response:
+    properties:
+      data: {}
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: REST API untuk aplikasi Point of Sale (POS).
+  title: POS Backend API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Login dan mendapatkan JWT token.
+      parameters:
+      - description: Kredensial login
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/POS_internal_dto.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/POS_internal_response.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+      summary: Login user
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Mendaftarkan user baru dengan role default "user".
+      parameters:
+      - description: Data registrasi
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/POS_internal_dto.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/POS_internal_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+      summary: Registrasi user baru
+      tags:
+      - auth
+  /categories:
+    get:
+      parameters:
+      - description: Halaman (default 1)
+        in: query
+        name: page
+        type: integer
+      - description: Jumlah per halaman (default 10)
+        in: query
+        name: limit
+        type: integer
+      - description: Cari berdasarkan nama
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/POS_internal_response.PaginationResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List kategori
+      tags:
+      - categories
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Data kategori
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/POS_internal_dto.CreateCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/POS_internal_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Buat kategori
+      tags:
+      - categories
+  /categories/{id}:
+    delete:
+      parameters:
+      - description: ID kategori
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/POS_internal_response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Hapus kategori (soft delete)
+      tags:
+      - categories
+    get:
+      parameters:
+      - description: ID kategori
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/POS_internal_response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Detail kategori
+      tags:
+      - categories
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID kategori
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Data kategori
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/POS_internal_dto.UpdateCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/POS_internal_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update kategori
+      tags:
+      - categories
+  /transactions:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Data transaksi
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/POS_internal_dto.CreateTransactionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/POS_internal_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Buat transaksi baru
+      tags:
+      - transactions
+  /transactions/{id}/void:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID Transaksi
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Alasan void
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/POS_internal_dto.VoidTransactionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/POS_internal_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Void transaksi (admin only)
+      tags:
+      - transactions
+securityDefinitions:
+  BearerAuth:
+    description: 'Masukkan token dengan format: Bearer <token>'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
