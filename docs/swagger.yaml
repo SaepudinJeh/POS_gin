@@ -1,5 +1,14 @@
 basePath: /api/v1
 definitions:
+  POS_internal_dto.BulkUpdateSettingRequest:
+    properties:
+      settings:
+        additionalProperties:
+          type: string
+        type: object
+    required:
+    - settings
+    type: object
   POS_internal_dto.CreateCategoryRequest:
     properties:
       description:
@@ -13,6 +22,63 @@ definitions:
         type: string
     required:
     - name
+    type: object
+  POS_internal_dto.CreateProductRequest:
+    properties:
+      category_id:
+        example: 1
+        type: integer
+      cost:
+        example: 2500
+        minimum: 0
+        type: number
+      description:
+        example: Mie instan goreng
+        type: string
+      name:
+        example: Indomie Goreng
+        type: string
+      price:
+        example: 3500
+        minimum: 0
+        type: number
+      sku:
+        example: MKN-001
+        type: string
+      stock:
+        example: 100
+        minimum: 0
+        type: integer
+    required:
+    - category_id
+    - name
+    - price
+    - sku
+    type: object
+  POS_internal_dto.CreateStockMutationRequest:
+    properties:
+      note:
+        example: Restock dari supplier
+        maxLength: 255
+        type: string
+      product_id:
+        example: 1
+        type: integer
+      quantity:
+        example: 50
+        minimum: 0
+        type: integer
+      type:
+        enum:
+        - in
+        - out
+        - adjustment
+        example: in
+        type: string
+    required:
+    - product_id
+    - quantity
+    - type
     type: object
   POS_internal_dto.CreateTransactionItemRequest:
     properties:
@@ -74,6 +140,23 @@ definitions:
     - email
     - password
     type: object
+  POS_internal_dto.PayTransactionRequest:
+    properties:
+      payment_amount:
+        example: 20000
+        type: number
+      payment_method:
+        enum:
+        - cash
+        - qris
+        - card
+        - transfer
+        example: cash
+        type: string
+    required:
+    - payment_amount
+    - payment_method
+    type: object
   POS_internal_dto.RegisterRequest:
     properties:
       email:
@@ -105,6 +188,46 @@ definitions:
         type: string
     required:
     - name
+    type: object
+  POS_internal_dto.UpdateProductRequest:
+    properties:
+      category_id:
+        type: integer
+      cost:
+        minimum: 0
+        type: number
+      description:
+        maxLength: 500
+        type: string
+      is_active:
+        type: boolean
+      name:
+        maxLength: 150
+        minLength: 2
+        type: string
+      price:
+        minimum: 0
+        type: number
+      sku:
+        maxLength: 50
+        minLength: 2
+        type: string
+      stock:
+        minimum: 0
+        type: integer
+    required:
+    - category_id
+    - name
+    - price
+    - sku
+    type: object
+  POS_internal_dto.UpdateSettingRequest:
+    properties:
+      value:
+        example: "12"
+        type: string
+    required:
+    - value
     type: object
   POS_internal_dto.VoidTransactionRequest:
     properties:
@@ -163,7 +286,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Login dan mendapatkan JWT token.
+      description: Login dengan email dan password, mengembalikan JWT token.
       parameters:
       - description: Kredensial login
         in: body
@@ -178,6 +301,10 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/POS_internal_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
@@ -263,13 +390,17 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/POS_internal_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
         "403":
           description: Forbidden
           schema:
             $ref: '#/definitions/POS_internal_response.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Buat kategori
+      summary: Buat kategori baru
       tags:
       - categories
   /categories/{id}:
@@ -287,6 +418,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/POS_internal_response.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
         "404":
           description: Not Found
           schema:
@@ -345,15 +484,467 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/POS_internal_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Update kategori
       tags:
       - categories
-  /transactions:
+  /products:
+    get:
+      description: 'Filter & pagination. Contoh: ?page=1&limit=10&search=indomie&category_id=1&is_active=true'
+      parameters:
+      - description: Halaman (default 1)
+        in: query
+        name: page
+        type: integer
+      - description: Jumlah per halaman (default 10)
+        in: query
+        name: limit
+        type: integer
+      - description: Cari berdasarkan nama atau SKU
+        in: query
+        name: search
+        type: string
+      - description: Filter berdasarkan ID kategori
+        in: query
+        name: category_id
+        type: integer
+      - description: Filter status aktif
+        in: query
+        name: is_active
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/POS_internal_response.PaginationResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List produk
+      tags:
+      - products
     post:
       consumes:
       - application/json
+      parameters:
+      - description: Data produk
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/POS_internal_dto.CreateProductRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/POS_internal_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Buat produk baru
+      tags:
+      - products
+  /products/{id}:
+    delete:
+      parameters:
+      - description: ID produk
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/POS_internal_response.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Hapus produk (soft delete)
+      tags:
+      - products
+    get:
+      parameters:
+      - description: ID produk
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/POS_internal_response.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Detail produk
+      tags:
+      - products
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID produk
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Data produk
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/POS_internal_dto.UpdateProductRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/POS_internal_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update produk
+      tags:
+      - products
+  /products/{id}/mutations:
+    get:
+      parameters:
+      - description: ID produk
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/POS_internal_response.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Riwayat mutasi per produk
+      tags:
+      - stock
+  /settings:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/POS_internal_response.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List semua setting (admin only)
+      tags:
+      - settings
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Map key-value
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/POS_internal_dto.BulkUpdateSettingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/POS_internal_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update banyak setting sekaligus (admin only)
+      tags:
+      - settings
+  /settings/{key}:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 'Key setting (contoh: tax_rate)'
+        in: path
+        name: key
+        required: true
+        type: string
+      - description: Nilai baru
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/POS_internal_dto.UpdateSettingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/POS_internal_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update satu setting (admin only)
+      tags:
+      - settings
+  /stock/mutations:
+    get:
+      parameters:
+      - description: Halaman (default 1)
+        in: query
+        name: page
+        type: integer
+      - description: Jumlah per halaman (default 10)
+        in: query
+        name: limit
+        type: integer
+      - description: Filter tipe (in/out/adjustment)
+        in: query
+        name: type
+        type: string
+      - description: Filter berdasarkan ID produk
+        in: query
+        name: product_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/POS_internal_response.PaginationResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List mutasi stok
+      tags:
+      - stock
+    post:
+      consumes:
+      - application/json
+      description: 'Tipe: `in` (tambah), `out` (kurangi), `adjustment` (set ke nilai
+        baru).'
+      parameters:
+      - description: Data mutasi
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/POS_internal_dto.CreateStockMutationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/POS_internal_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Catat mutasi stok (admin only)
+      tags:
+      - stock
+  /stock/mutations/{id}:
+    get:
+      parameters:
+      - description: ID mutasi
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/POS_internal_response.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Detail mutasi stok
+      tags:
+      - stock
+  /transactions:
+    get:
+      description: Filter status, kasir, tanggal, dan invoice number.
+      parameters:
+      - description: Halaman (default 1)
+        in: query
+        name: page
+        type: integer
+      - description: Jumlah per halaman (default 10)
+        in: query
+        name: limit
+        type: integer
+      - description: Filter status (pending/paid/void)
+        in: query
+        name: status
+        type: string
+      - description: Filter berdasarkan ID kasir
+        in: query
+        name: cashier_id
+        type: integer
+      - description: Cari invoice number
+        in: query
+        name: search
+        type: string
+      - description: 'Dari tanggal (format: 2026-10-01)'
+        in: query
+        name: from
+        type: string
+      - description: 'Sampai tanggal (format: 2026-10-31)'
+        in: query
+        name: to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/POS_internal_response.PaginationResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List transaksi
+      tags:
+      - transactions
+    post:
+      consumes:
+      - application/json
+      description: Kalau `payment_method` dan `payment_amount` diisi, transaksi langsung
+        `paid`. Kalau tidak, status `pending`. Stok otomatis berkurang.
       parameters:
       - description: Data transaksi
         in: body
@@ -372,17 +963,86 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/POS_internal_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Buat transaksi baru
+      tags:
+      - transactions
+  /transactions/{id}:
+    get:
+      parameters:
+      - description: ID transaksi
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/POS_internal_response.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Detail transaksi
+      tags:
+      - transactions
+  /transactions/{id}/pay:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID transaksi
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Data pembayaran
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/POS_internal_dto.PayTransactionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/POS_internal_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Bayar transaksi pending
       tags:
       - transactions
   /transactions/{id}/void:
     post:
       consumes:
       - application/json
+      description: Membatalkan transaksi dan mengembalikan stok. Alasan wajib diisi.
       parameters:
-      - description: ID Transaksi
+      - description: ID transaksi
         in: path
         name: id
         required: true
@@ -402,6 +1062,10 @@ paths:
             $ref: '#/definitions/POS_internal_response.Response'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+        "401":
+          description: Unauthorized
           schema:
             $ref: '#/definitions/POS_internal_response.ErrorResponse'
         "403":

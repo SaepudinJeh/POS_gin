@@ -21,6 +21,20 @@ func NewProductHandler(svc *services.ProductService) *ProductHandler {
 	return &ProductHandler{svc: svc}
 }
 
+// GetAllProducts godoc
+// @Summary      List produk
+// @Description  Filter & pagination. Contoh: ?page=1&limit=10&search=indomie&category_id=1&is_active=true
+// @Tags         products
+// @Produce      json
+// @Security     BearerAuth
+// @Param        page query int false "Halaman (default 1)"
+// @Param        limit query int false "Jumlah per halaman (default 10)"
+// @Param        search query string false "Cari berdasarkan nama atau SKU"
+// @Param        category_id query int false "Filter berdasarkan ID kategori"
+// @Param        is_active query bool false "Filter status aktif"
+// @Success      200 {object} response.PaginationResponse
+// @Failure      401 {object} response.ErrorResponse
+// @Router       /products [get]
 func (h *ProductHandler) GetAll(c *gin.Context) {
 	filter := repositories.ProductFilter{
 		Search: c.Query("search"),
@@ -55,6 +69,16 @@ func (h *ProductHandler) GetAll(c *gin.Context) {
 	response.Paginated(c, responses, total, filter.Page, filter.Limit)
 }
 
+// GetProduct godoc
+// @Summary      Detail produk
+// @Tags         products
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "ID produk"
+// @Success      200 {object} response.Response
+// @Failure      401 {object} response.ErrorResponse
+// @Failure      404 {object} response.ErrorResponse
+// @Router       /products/{id} [get]
 func (h *ProductHandler) GetByID(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -70,6 +94,18 @@ func (h *ProductHandler) GetByID(c *gin.Context) {
 	response.Success(c, toProductResponse(product))
 }
 
+// CreateProduct godoc
+// @Summary      Buat produk baru
+// @Tags         products
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body dto.CreateProductRequest true "Data produk"
+// @Success      201 {object} response.Response
+// @Failure      400 {object} response.ErrorResponse
+// @Failure      401 {object} response.ErrorResponse
+// @Failure      403 {object} response.ErrorResponse
+// @Router       /products [post]
 func (h *ProductHandler) Create(c *gin.Context) {
 	var req dto.CreateProductRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -95,6 +131,19 @@ func (h *ProductHandler) Create(c *gin.Context) {
 	response.CreatedWithMessage(c, "Produk berhasil dibuat", toProductResponse(full))
 }
 
+// UpdateProduct godoc
+// @Summary      Update produk
+// @Tags         products
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "ID produk"
+// @Param        request body dto.UpdateProductRequest true "Data produk"
+// @Success      200 {object} response.Response
+// @Failure      400 {object} response.ErrorResponse
+// @Failure      401 {object} response.ErrorResponse
+// @Failure      403 {object} response.ErrorResponse
+// @Router       /products/{id} [put]
 func (h *ProductHandler) Update(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -127,6 +176,17 @@ func (h *ProductHandler) Update(c *gin.Context) {
 	response.SuccessWithMessage(c, "Produk berhasil diperbarui", toProductResponse(full))
 }
 
+// DeleteProduct godoc
+// @Summary      Hapus produk (soft delete)
+// @Tags         products
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "ID produk"
+// @Success      200 {object} response.Response
+// @Failure      401 {object} response.ErrorResponse
+// @Failure      403 {object} response.ErrorResponse
+// @Failure      404 {object} response.ErrorResponse
+// @Router       /products/{id} [delete]
 func (h *ProductHandler) Delete(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {

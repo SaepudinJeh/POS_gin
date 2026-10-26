@@ -22,6 +22,22 @@ func NewTransactionHandler(svc *services.TransactionService) *TransactionHandler
 	return &TransactionHandler{svc: svc}
 }
 
+// GetAllTransactions godoc
+// @Summary      List transaksi
+// @Description  Filter status, kasir, tanggal, dan invoice number.
+// @Tags         transactions
+// @Produce      json
+// @Security     BearerAuth
+// @Param        page query int false "Halaman (default 1)"
+// @Param        limit query int false "Jumlah per halaman (default 10)"
+// @Param        status query string false "Filter status (pending/paid/void)"
+// @Param        cashier_id query int false "Filter berdasarkan ID kasir"
+// @Param        search query string false "Cari invoice number"
+// @Param        from query string false "Dari tanggal (format: 2026-10-01)"
+// @Param        to query string false "Sampai tanggal (format: 2026-10-31)"
+// @Success      200 {object} response.PaginationResponse
+// @Failure      401 {object} response.ErrorResponse
+// @Router       /transactions [get]
 func (h *TransactionHandler) GetAll(c *gin.Context) {
 	filter := repositories.TransactionFilter{
 		Status: c.Query("status"),
@@ -63,6 +79,16 @@ func (h *TransactionHandler) GetAll(c *gin.Context) {
 	response.Paginated(c, responses, total, filter.Page, filter.Limit)
 }
 
+// GetTransaction godoc
+// @Summary      Detail transaksi
+// @Tags         transactions
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "ID transaksi"
+// @Success      200 {object} response.Response
+// @Failure      401 {object} response.ErrorResponse
+// @Failure      404 {object} response.ErrorResponse
+// @Router       /transactions/{id} [get]
 func (h *TransactionHandler) GetByID(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -80,6 +106,7 @@ func (h *TransactionHandler) GetByID(c *gin.Context) {
 
 // CreateTransaction godoc
 // @Summary      Buat transaksi baru
+// @Description  Kalau `payment_method` dan `payment_amount` diisi, transaksi langsung `paid`. Kalau tidak, status `pending`. Stok otomatis berkurang.
 // @Tags         transactions
 // @Accept       json
 // @Produce      json
@@ -87,6 +114,7 @@ func (h *TransactionHandler) GetByID(c *gin.Context) {
 // @Param        request body dto.CreateTransactionRequest true "Data transaksi"
 // @Success      201 {object} response.Response
 // @Failure      400 {object} response.ErrorResponse
+// @Failure      401 {object} response.ErrorResponse
 // @Router       /transactions [post]
 func (h *TransactionHandler) Create(c *gin.Context) {
 	var req dto.CreateTransactionRequest
@@ -122,6 +150,18 @@ func (h *TransactionHandler) Create(c *gin.Context) {
 	response.CreatedWithMessage(c, "Transaksi berhasil dibuat", toTransactionResponse(txn))
 }
 
+// PayTransaction godoc
+// @Summary      Bayar transaksi pending
+// @Tags         transactions
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "ID transaksi"
+// @Param        request body dto.PayTransactionRequest true "Data pembayaran"
+// @Success      200 {object} response.Response
+// @Failure      400 {object} response.ErrorResponse
+// @Failure      401 {object} response.ErrorResponse
+// @Router       /transactions/{id}/pay [post]
 func (h *TransactionHandler) Pay(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -145,14 +185,16 @@ func (h *TransactionHandler) Pay(c *gin.Context) {
 
 // VoidTransaction godoc
 // @Summary      Void transaksi (admin only)
+// @Description  Membatalkan transaksi dan mengembalikan stok. Alasan wajib diisi.
 // @Tags         transactions
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        id path int true "ID Transaksi"
+// @Param        id path int true "ID transaksi"
 // @Param        request body dto.VoidTransactionRequest true "Alasan void"
 // @Success      200 {object} response.Response
 // @Failure      400 {object} response.ErrorResponse
+// @Failure      401 {object} response.ErrorResponse
 // @Failure      403 {object} response.ErrorResponse
 // @Router       /transactions/{id}/void [post]
 func (h *TransactionHandler) Void(c *gin.Context) {

@@ -72,7 +72,7 @@ func (h *CategoryHandler) GetByID(c *gin.Context) {
 }
 
 // CreateCategory godoc
-// @Summary      Buat kategori
+// @Summary      Buat kategori baru
 // @Tags         categories
 // @Accept       json
 // @Produce      json
@@ -80,6 +80,7 @@ func (h *CategoryHandler) GetByID(c *gin.Context) {
 // @Param        request body dto.CreateCategoryRequest true "Data kategori"
 // @Success      201 {object} response.Response
 // @Failure      400 {object} response.ErrorResponse
+// @Failure      401 {object} response.ErrorResponse
 // @Failure      403 {object} response.ErrorResponse
 // @Router       /categories [post]
 func (h *CategoryHandler) Create(c *gin.Context) {
@@ -107,6 +108,8 @@ func (h *CategoryHandler) Create(c *gin.Context) {
 // @Param        request body dto.UpdateCategoryRequest true "Data kategori"
 // @Success      200 {object} response.Response
 // @Failure      400 {object} response.ErrorResponse
+// @Failure      401 {object} response.ErrorResponse
+// @Failure      403 {object} response.ErrorResponse
 // @Router       /categories/{id} [put]
 func (h *CategoryHandler) Update(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
@@ -136,6 +139,8 @@ func (h *CategoryHandler) Update(c *gin.Context) {
 // @Security     BearerAuth
 // @Param        id path int true "ID kategori"
 // @Success      200 {object} response.Response
+// @Failure      401 {object} response.ErrorResponse
+// @Failure      403 {object} response.ErrorResponse
 // @Failure      404 {object} response.ErrorResponse
 // @Router       /categories/{id} [delete]
 func (h *CategoryHandler) Delete(c *gin.Context) {

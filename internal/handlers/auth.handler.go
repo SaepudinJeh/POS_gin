@@ -45,12 +45,13 @@ func (h *AuthHandler) Register(c *gin.Context) {
 
 // Login godoc
 // @Summary      Login user
-// @Description  Login dan mendapatkan JWT token.
+// @Description  Login dengan email dan password, mengembalikan JWT token.
 // @Tags         auth
 // @Accept       json
 // @Produce      json
 // @Param        request body dto.LoginRequest true "Kredensial login"
 // @Success      200 {object} response.Response
+// @Failure      400 {object} response.ErrorResponse
 // @Failure      401 {object} response.ErrorResponse
 // @Router       /auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {

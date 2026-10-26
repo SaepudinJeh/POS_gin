@@ -17,6 +17,15 @@ func NewSettingHandler(svc *services.SettingService) *SettingHandler {
 	return &SettingHandler{svc: svc}
 }
 
+// GetAllSettings godoc
+// @Summary      List semua setting (admin only)
+// @Tags         settings
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200 {object} response.Response
+// @Failure      401 {object} response.ErrorResponse
+// @Failure      403 {object} response.ErrorResponse
+// @Router       /settings [get]
 func (h *SettingHandler) GetAll(c *gin.Context) {
 	settings, err := h.svc.GetAll(c.Request.Context())
 	if err != nil {
@@ -35,6 +44,19 @@ func (h *SettingHandler) GetAll(c *gin.Context) {
 	response.Success(c, result)
 }
 
+// UpdateSetting godoc
+// @Summary      Update satu setting (admin only)
+// @Tags         settings
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        key path string true "Key setting (contoh: tax_rate)"
+// @Param        request body dto.UpdateSettingRequest true "Nilai baru"
+// @Success      200 {object} response.Response
+// @Failure      400 {object} response.ErrorResponse
+// @Failure      401 {object} response.ErrorResponse
+// @Failure      403 {object} response.ErrorResponse
+// @Router       /settings/{key} [put]
 func (h *SettingHandler) Update(c *gin.Context) {
 	key := c.Param("key")
 	if key == "" {
@@ -55,6 +77,18 @@ func (h *SettingHandler) Update(c *gin.Context) {
 	response.SuccessWithMessage(c, "Setting berhasil diperbarui", nil)
 }
 
+// BulkUpdateSettings godoc
+// @Summary      Update banyak setting sekaligus (admin only)
+// @Tags         settings
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body dto.BulkUpdateSettingRequest true "Map key-value"
+// @Success      200 {object} response.Response
+// @Failure      400 {object} response.ErrorResponse
+// @Failure      401 {object} response.ErrorResponse
+// @Failure      403 {object} response.ErrorResponse
+// @Router       /settings [put]
 func (h *SettingHandler) BulkUpdate(c *gin.Context) {
 	var req dto.BulkUpdateSettingRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

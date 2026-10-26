@@ -21,6 +21,18 @@ func NewStockHandler(svc *services.StockService) *StockHandler {
 	return &StockHandler{svc: svc}
 }
 
+// GetAllStockMutations godoc
+// @Summary      List mutasi stok
+// @Tags         stock
+// @Produce      json
+// @Security     BearerAuth
+// @Param        page query int false "Halaman (default 1)"
+// @Param        limit query int false "Jumlah per halaman (default 10)"
+// @Param        type query string false "Filter tipe (in/out/adjustment)"
+// @Param        product_id query int false "Filter berdasarkan ID produk"
+// @Success      200 {object} response.PaginationResponse
+// @Failure      401 {object} response.ErrorResponse
+// @Router       /stock/mutations [get]
 func (h *StockHandler) GetAll(c *gin.Context) {
 	filter := repositories.StockFilter{
 		Type:  c.Query("type"),
@@ -49,6 +61,16 @@ func (h *StockHandler) GetAll(c *gin.Context) {
 	response.Paginated(c, responses, total, filter.Page, filter.Limit)
 }
 
+// GetStockMutation godoc
+// @Summary      Detail mutasi stok
+// @Tags         stock
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "ID mutasi"
+// @Success      200 {object} response.Response
+// @Failure      401 {object} response.ErrorResponse
+// @Failure      404 {object} response.ErrorResponse
+// @Router       /stock/mutations/{id} [get]
 func (h *StockHandler) GetByID(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -64,6 +86,16 @@ func (h *StockHandler) GetByID(c *gin.Context) {
 	response.Success(c, toStockMutationResponse(mut))
 }
 
+// GetProductStockMutations godoc
+// @Summary      Riwayat mutasi per produk
+// @Tags         stock
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "ID produk"
+// @Success      200 {object} response.Response
+// @Failure      401 {object} response.ErrorResponse
+// @Failure      404 {object} response.ErrorResponse
+// @Router       /products/{id}/mutations [get]
 func (h *StockHandler) GetByProductID(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -85,6 +117,19 @@ func (h *StockHandler) GetByProductID(c *gin.Context) {
 	response.Success(c, responses)
 }
 
+// CreateStockMutation godoc
+// @Summary      Catat mutasi stok (admin only)
+// @Description  Tipe: `in` (tambah), `out` (kurangi), `adjustment` (set ke nilai baru).
+// @Tags         stock
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body dto.CreateStockMutationRequest true "Data mutasi"
+// @Success      201 {object} response.Response
+// @Failure      400 {object} response.ErrorResponse
+// @Failure      401 {object} response.ErrorResponse
+// @Failure      403 {object} response.ErrorResponse
+// @Router       /stock/mutations [post]
 func (h *StockHandler) Create(c *gin.Context) {
 	var req dto.CreateStockMutationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
