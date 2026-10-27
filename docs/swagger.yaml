@@ -697,6 +697,168 @@ paths:
       summary: Riwayat mutasi per produk
       tags:
       - stock
+  /reports/by-cashier:
+    get:
+      parameters:
+      - description: Dari tanggal (YYYY-MM-DD)
+        in: query
+        name: from
+        type: string
+      - description: Sampai tanggal (YYYY-MM-DD)
+        in: query
+        name: to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/POS_internal_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Laporan per kasir
+      tags:
+      - reports
+  /reports/by-category:
+    get:
+      parameters:
+      - description: Dari tanggal (YYYY-MM-DD)
+        in: query
+        name: from
+        type: string
+      - description: Sampai tanggal (YYYY-MM-DD)
+        in: query
+        name: to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/POS_internal_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Laporan per kategori
+      tags:
+      - reports
+  /reports/by-product:
+    get:
+      parameters:
+      - description: Dari tanggal (YYYY-MM-DD)
+        in: query
+        name: from
+        type: string
+      - description: Sampai tanggal (YYYY-MM-DD)
+        in: query
+        name: to
+        type: string
+      - description: Jumlah produk (default 10)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/POS_internal_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Laporan produk terlaris
+      tags:
+      - reports
+  /reports/daily:
+    get:
+      description: Time series per hari untuk chart.
+      parameters:
+      - description: Dari tanggal (YYYY-MM-DD)
+        in: query
+        name: from
+        type: string
+      - description: Sampai tanggal (YYYY-MM-DD)
+        in: query
+        name: to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/POS_internal_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Laporan harian
+      tags:
+      - reports
+  /reports/summary:
+    get:
+      description: Total transaksi, revenue, profit, diskon, pajak. Hanya transaksi
+        paid.
+      parameters:
+      - description: Dari tanggal (YYYY-MM-DD), default hari ini
+        in: query
+        name: from
+        type: string
+      - description: Sampai tanggal (YYYY-MM-DD), default hari ini
+        in: query
+        name: to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/POS_internal_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/POS_internal_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Ringkasan penjualan
+      tags:
+      - reports
   /settings:
     get:
       produces:

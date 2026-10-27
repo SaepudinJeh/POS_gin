@@ -20,6 +20,7 @@ type Handlers struct {
 	Stock       *handlers.StockHandler
 	Transaction *handlers.TransactionHandler
 	Setting     *handlers.SettingHandler
+	Report      *handlers.ReportHandler
 }
 
 func SetupRouter(h *Handlers) *gin.Engine {
@@ -47,6 +48,7 @@ func SetupRouter(h *Handlers) *gin.Engine {
 	RegisterStockRoutes(protected, h.Stock)
 	RegisterTransactionRoutes(protected, h.Transaction)
 	RegisterSettingRoutes(protected, h.Setting)
+	RegisterReportRoutes(protected, h.Report)
 
 	// 4. Fallback
 	r.NoRoute(func(c *gin.Context) {
