@@ -89,6 +89,7 @@ func (s *TransactionService) Create(ctx context.Context, input TransactionInput)
 			ProductSKU:  product.SKU,
 			ProductName: product.Name,
 			UnitPrice:   product.Price,
+			UnitCost:    product.Cost,
 			Quantity:    in.Quantity,
 			Subtotal:    itemSubtotal,
 		})
