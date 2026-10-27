@@ -54,6 +54,7 @@ type TransactionItem struct {
 	ProductSKU    string    `gorm:"size:50;not null" json:"product_sku"`
 	ProductName   string    `gorm:"size:150;not null" json:"product_name"`
 	UnitPrice     float64   `gorm:"not null" json:"unit_price"`
+	UnitCost      float64   `gorm:"not null;default:0" json:"unit_cost"`
 	Quantity      int       `gorm:"not null" json:"quantity"`
 	Subtotal      float64   `gorm:"not null" json:"subtotal"`
 	CreatedAt     time.Time `json:"created_at"`
